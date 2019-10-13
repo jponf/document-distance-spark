@@ -26,7 +26,7 @@ object Main {
 
     val spark = SparkSession.builder
       .master("local[*]")
-      .appName("Word count")
+      .appName("Document Distance")
       .getOrCreate()
 
     // load file
@@ -41,12 +41,8 @@ object Main {
         .map(word => (word, 1))
         .reduceByKey(_ + _)
 
-      val allWordsRDD = text1WordsRDD.union(text2WordsRDD).reduceByKey(_ + _)
-
       println(s"Number of words in ${args(0)}: ${text1WordsRDD.count()}")
       println(s"Number of words in ${args(1)}: ${text2WordsRDD.count()}")
-      println("Number of different words within both documents: " +
-              s"${allWordsRDD.count()}")
 
       val doc1Norm = math.sqrt(text1WordsRDD.values.map(x => x * x).sum())
       val doc2Norm = math.sqrt(text2WordsRDD.values.map(x => x * x).sum())
@@ -62,8 +58,6 @@ object Main {
       println(s"Inner product: $innerProduct")
 
       val cosineSimilarity = innerProduct / (doc1Norm * doc2Norm)
-      println("The cosine similarity metric should be in range [0, 1]"
-              + ", where 0 means minimum similarity and 1 maximum similarity")
       println(f"Cosine similarity: $cosineSimilarity%.5f")
     } catch {
       case err: org.apache.hadoop.mapred.InvalidInputException =>
@@ -73,16 +67,4 @@ object Main {
 
     sys.exit(0)
   }
-
-  /*def euclideanNormFromRDD(rdd: RDD[(String, Int)]): Double = {
-    math.sqrt(
-      rdd.fold((null, 0))(
-        (wc1, wc2) => {
-          if (wc1._1 == null && wc2._1 == null)
-            (null, wc1._2 + wc2._2)
-          else
-            (null, wc1._2 + wc2._2 * wc2._2)
-        })._2
-    )
-  }*/
 }
